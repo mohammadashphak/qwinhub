@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Question {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  title          String
+  options        String[]   // e.g., ["A", "B", "C", "D"]
+  correctAnswer  String
+  deadline       DateTime
+  createdAt      DateTime   @default(now())
+
+  responses      Response[]
+  winners        Winner[]
+}
+
+model Response {
+  id           String   @id @default(cuid())
+  questionId   String
+  question     Question @relation(fields: [questionId], references: [id])
+
+  name         String
+  email        String
+  answer       String
+  isCorrect    Boolean
+  submittedAt  DateTime @default(now())
+}
+
+model Winner {
+  id           String   @id @default(cuid())
+  questionId   String
+  question     Question @relation(fields: [questionId], references: [id])
+
+  name         String
+  phone        String
+  selectedAt   DateTime @default(now())
+}
+
+model MonthlyWinner {
+  id           String   @id @default(cuid())
+  month        Int      // e.g., 7
+  year         Int      // e.g., 2025
+
+  name         String
+  phone        String
+  questionId   String
+  question     Question @relation(fields: [questionId], references: [id])
+
+  selectedAt   DateTime @default(now())
+}
+
+model MessageDraft {
+  id           String   @id @default(cuid())
+  type         DraftType
+  subject      String
+  body         String   // Email template with placeholders like {{name}}, {{winner}}, etc.
+  showNamesOfCorrect bool @default(true)
+  showNamesOfWrong   bool @default(false)
+  createdAt    DateTime  @default(now())
+}
+
+enum DraftType {
+  SHARE
+  RESULT
+  MONTHLY
+}
