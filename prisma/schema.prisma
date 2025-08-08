@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Admin account (seeded manually)
+model Admin {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String // bcrypt hashed
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("admins")
+}
+
+// Email templates with placeholders
+model Draft {
+  id      String    @id @default(cuid())
+  type    DraftType @unique // Only one of each type allowed
+  subject String
+  content String    @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("drafts")
+}
+
+enum DraftType {
+  SHARE    // Template for sharing new quiz
+  QUESTION // Template for quiz results/winner announcement
+  MONTHLY  // Template for monthly winner announcement
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  options       String[] // Array of quiz options
+  correctAnswer String   // Must match one of the options exactly
+  deadline      DateTime // Stored in UTC
+  isProcessed   Boolean  @default(false) // Tracks if winner selection is complete
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  responses     Response[]
+  winner        Winner?
+  monthlyWinner MonthlyWinner? // A quiz can be selected as monthly winner only once
+  
+  // Indexes for performance
+  @@index([deadline])
+  @@index([isProcessed])
+  @@map("quizzes")
+}
+
+model Response {
+  id        String  @id @default(cuid())
+  quizId    String
+  name      String
+  phone     String  // Normalized: last 10 digits only
+  answer    String  // User's selected answer
+  isCorrect Boolean // Calculated based on correctAnswer
+  
+  submittedAt DateTime @default(now())
+  
+  // Relationships
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  
+  // Constraints
+  @@unique([quizId, phone], name: "unique_response_per_phone_per_quiz")
+  @@index([quizId, isCorrect]) // For efficient winner selection
+  @@map("responses")
+}
+
+model Winner {
+  id     String @id @default(cuid())
+  quizId String @unique // One winner per quiz
+  name   String
+  phone  String
+  
+  selectedAt DateTime @default(now())
+  
+  // Relationships
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  
+  @@map("winners")
+}
+
+model MonthlyWinner {
+  id     String @id @default(cuid())
+  quizId String @unique // References the quiz they originally won
+  month  Int    // 1-12
+  year   Int    // e.g., 2024
+  name   String
+  phone  String
+  
+  selectedAt DateTime @default(now())
+  
+  // Relationships
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  
+  // Constraints - only one monthly winner per month
+  @@unique([month, year], name: "unique_monthly_winner")
+  @@index([year, month]) // For efficient querying
+  @@map("monthly_winners")
+}
