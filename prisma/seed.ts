@@ -41,7 +41,7 @@ Don't miss out - participate now and win exciting prizes! 🏆
 Good luck! 🍀`,
     },
     {
-      type: DraftType.QUESTION,
+      type: DraftType.RESULT,
       subject: '📊 Quiz Results: {{TITLE}} - Winner Announcement',
       content: `📊 **Quiz Results for: {{TITLE}}**
 

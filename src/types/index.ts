@@ -80,7 +80,7 @@ export interface AdminLoginForm {
 }
 
 export interface DraftForm {
-  type: 'SHARE' | 'QUESTION' | 'MONTHLY';
+  type: 'SHARE' | 'RESULT' | 'MONTHLY';
   subject: string;
   content: string;
 }
@@ -178,7 +178,7 @@ export interface RecentActivity {
 
 // Email template types
 export interface EmailTemplate {
-  type: 'SHARE' | 'QUESTION' | 'MONTHLY';
+  type: 'SHARE' | 'RESULT' | 'MONTHLY';
   subject: string;
   content: string;
   placeholders: string[];

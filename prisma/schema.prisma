@@ -37,7 +37,7 @@ model Draft {
 
 enum DraftType {
   SHARE    // Template for sharing new quiz
-  QUESTION // Template for quiz results/winner announcement
+  RESULT // Template for quiz results/winner announcement
   MONTHLY  // Template for monthly winner announcement
 }
 

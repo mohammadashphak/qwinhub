@@ -16,7 +16,7 @@ export const adminLoginSchema = z.object({
 
 // Draft validation
 export const draftSchema = z.object({
-  type: z.enum(['SHARE', 'QUESTION', 'MONTHLY']),
+  type: z.enum(['SHARE', 'RESULT', 'MONTHLY']),
   subject: z.string().min(1, 'Subject is required').max(200, 'Subject too long'),
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
 });
@@ -85,7 +85,7 @@ export const emailPlaceholders = {
     LINK: z.string().url(),
     DEADLINE: z.string(),
   }),
-  QUESTION: z.object({
+  RESULT: z.object({
     TITLE: z.string(),
     OPTIONS: z.string(), // Added: Quiz options
     TOTAL_RESPONSES: z.string(),
@@ -110,6 +110,58 @@ export const emailPlaceholders = {
     MONTHLY_WINNER_PHONE: z.string(), // Added: Final monthly winner phone
   }),
 } as const;
+
+// Email placeholder values type
+export type EmailPlaceholderValues = {
+  SHARE: z.infer<typeof emailPlaceholders.SHARE>;
+  RESULT: z.infer<typeof emailPlaceholders.RESULT>;
+  MONTHLY: z.infer<typeof emailPlaceholders.MONTHLY>;
+};
+
+// Utility function to validate email template placeholders
+export function validateEmailTemplate(
+  type: keyof typeof emailPlaceholders,
+  content: string
+): { isValid: boolean; missingPlaceholders: string[]; invalidPlaceholders: string[] } {
+  const schema = emailPlaceholders[type];
+  const validPlaceholders = Object.keys(schema.shape);
+  
+  // Extract placeholders from content
+  const placeholderRegex = /\{\{(\w+)\}\}/g;
+  const foundPlaceholders = new Set<string>();
+  let match;
+  
+  while ((match = placeholderRegex.exec(content)) !== null) {
+    foundPlaceholders.add(match[1]);
+  }
+  
+  // Check for missing required placeholders
+  const missingPlaceholders = validPlaceholders.filter(
+    placeholder => !foundPlaceholders.has(placeholder)
+  );
+  
+  // Check for invalid placeholders
+  const invalidPlaceholders = Array.from(foundPlaceholders).filter(
+    placeholder => !validPlaceholders.includes(placeholder)
+  );
+  
+  return {
+    // Lenient mode: only block on invalid placeholders; allow missing ones
+    isValid: invalidPlaceholders.length === 0,
+    missingPlaceholders,
+    invalidPlaceholders
+  };
+}
+
+// Utility function to replace placeholders in email content
+export function replacePlaceholders(
+  content: string,
+  placeholderValues: Record<string, string>
+): string {
+  return content.replace(/\{\{(\w+)\}\}/g, (match, placeholder) => {
+    return placeholderValues[placeholder] || match;
+  });
+}
 
 // Utility function to validate API request bodies
 export function validateRequestBody<T>(schema: z.ZodSchema<T>, body: unknown): T {

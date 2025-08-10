@@ -22,7 +22,7 @@ export async function checkDraftsExist(): Promise<boolean> {
   return drafts === 3; // All three draft types must exist
 }
 
-export async function getDraftByType(type: 'SHARE' | 'QUESTION' | 'MONTHLY') {
+export async function getDraftByType(type: 'SHARE' | 'RESULT' | 'MONTHLY') {
   return await db.draft.findUnique({
     where: { type },
   });
