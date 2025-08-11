@@ -405,7 +405,7 @@ export default function DraftsPage() {
                   </div>
                   {draft ? (
                     <div className="text-sm text-gray-600">
-                      <p>Last updated: {new Date(draft.updatedAt).toLocaleDateString()}</p>
+                      <p>Last updated: {new Date(draft.updatedAt).toDateString()}</p>
                       <p>Subject: {draft.subject.substring(0, 30)}...</p>
                     </div>
                   ) : (
