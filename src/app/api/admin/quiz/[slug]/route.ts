@@ -6,11 +6,11 @@ import { slugParamSchema, quizUpdateSchema, validateParams, validateRequestBody 
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     await requireAdmin(request);
-    const { slug } = validateParams(slugParamSchema, params);
+    const { slug } = validateParams(slugParamSchema, await context.params);
 
     const quiz = await db.quiz.findUnique({ where: { slug } });
     if (!quiz) {
@@ -26,11 +26,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     await requireAdmin(request);
-    const { slug } = validateParams(slugParamSchema, params);
+    const { slug } = validateParams(slugParamSchema, await context.params);
 
     const body = await request.json();
     const data = validateRequestBody(quizUpdateSchema, body);
@@ -73,11 +73,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     await requireAdmin(request);
-    const { slug } = validateParams(slugParamSchema, params);
+    const { slug } = validateParams(slugParamSchema, await context.params);
 
     const quiz = await db.quiz.findUnique({ where: { slug }, select: { id: true } });
     if (!quiz) {
