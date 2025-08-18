@@ -1,14 +1,14 @@
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  PlusCircle, 
-  List, 
-  Trophy,
-  Users,
-  Clock
-} from 'lucide-react';
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, PlusCircle, List, Trophy, Users, Clock } from "lucide-react";
+import QuickStats from "@/components/admin/QuickStats";
 
 export default function AdminDashboard() {
   return (
@@ -17,7 +17,8 @@ export default function AdminDashboard() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
         <p className="text-gray-600 mt-2">
-          Welcome to QWinHub admin panel. Manage your quizzes, drafts, and winners.
+          Welcome to QWinHub admin panel. Manage your quizzes, drafts, and
+          winners.
         </p>
       </div>
 
@@ -35,9 +36,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/admin/drafts">
-                Manage Drafts
-              </Link>
+              <Link href="/admin/drafts">Manage Drafts</Link>
             </Button>
           </CardContent>
         </Card>
@@ -54,9 +53,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/admin/create-quiz">
-                Create New Quiz
-              </Link>
+              <Link href="/admin/create-quiz">Create New Quiz</Link>
             </Button>
           </CardContent>
         </Card>
@@ -73,9 +70,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full" variant="outline">
-              <Link href="/admin/quizzes">
-                View All Quizzes
-              </Link>
+              <Link href="/admin/quizzes">View All Quizzes</Link>
             </Button>
           </CardContent>
         </Card>
@@ -92,55 +87,14 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full" variant="outline">
-              <Link href="/admin/monthly-winners">
-                View Winners
-              </Link>
+              <Link href="/admin/monthly-winners">View Winners</Link>
             </Button>
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
-            <List className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              All time quizzes created
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Quizzes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Currently accepting responses
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              All time quiz responses
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <QuickStats />
 
       {/* Getting Started */}
       <Card>
@@ -158,11 +112,12 @@ export default function AdminDashboard() {
             <div>
               <h4 className="font-medium">Set up email drafts</h4>
               <p className="text-sm text-gray-600">
-                Create the three required email templates: Share, Question Result, and Monthly Winner
+                Create the three required email templates: Share, Question
+                Result, and Monthly Winner
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
               2
@@ -174,7 +129,7 @@ export default function AdminDashboard() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
               3
