@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic"; // This export forces Next.js to render this page as a dynamic route (SSR) instead of static generation.
-import Link from "next/link";
 import PublicQuizzesInfinite from "@/components/public/PublicQuizzesInfinite";
+import PublicFilterTabs from "@/components/public/PublicFilterTabs";
 
 export default async function QuizzesPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const params = await searchParams;
@@ -14,26 +14,10 @@ export default async function QuizzesPage({ searchParams }: { searchParams: Prom
           <p className="text-gray-600 mt-2">Answer active quizzes or review answers from expired ones.</p>
         </div>
 
-        <div className="mb-6 flex items-center justify-center gap-2">
-          <FilterLink label="Active" href="/quizzes?filter=active" active={filter === "active"} />
-          <FilterLink label="Expired" href="/quizzes?filter=expired" active={filter === "expired"} />
-        </div>
+        <PublicFilterTabs current={filter} />
 
         <PublicQuizzesInfinite filter={filter} pageSize={15} />
       </div>
     </div>
-  );
-}
-
-function FilterLink({ label, href, active }: { label: string; href: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md border ${
-        active ? "bg-gray-900 text-white border-gray-900" : "bg-white hover:bg-gray-50"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }

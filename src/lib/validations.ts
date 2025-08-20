@@ -1,12 +1,15 @@
 import { z } from 'zod';
 
-// Phone number validation
-export const phoneSchema = z
+// Country-aware phone inputs (server will parse to E.164 using libphonenumber-js)
+export const countrySchema = z
   .string()
-  .min(1, 'Phone number is required')
-  .transform((val) => val.replace(/\D/g, '')) // Remove non-digits
-  .refine((val) => val.length >= 10, 'Phone number must be at least 10 digits')
-  .transform((val) => val.slice(-10)); // Take last 10 digits
+  .min(2, 'Country code is required')
+  .max(2, 'Country code must be ISO 3166-1 alpha-2 (e.g., IN, US)')
+  .transform((v) => v.toUpperCase());
+
+export const phoneInputSchema = z
+  .string()
+  .min(1, 'Phone number is required');
 
 // Admin authentication
 export const adminLoginSchema = z.object({
@@ -55,7 +58,8 @@ export const quizResponseSchema = z.object({
     .min(1, 'Name is required')
     .max(100, 'Name too long')
     .regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
-  phone: phoneSchema,
+  country: countrySchema,
+  phone: phoneInputSchema,
   answer: z.string().min(1, 'Please select an answer'),
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { isQuizActive, formatDeadline } from "@/lib/utils";
 
@@ -16,8 +16,17 @@ export type PublicQuiz = {
 
 export default function PublicQuizCard({ quiz }: { quiz: PublicQuiz }) {
   const [showAnswer, setShowAnswer] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const deadlineDate = typeof quiz.deadline === "string" ? new Date(quiz.deadline) : quiz.deadline;
   const active = isQuizActive(deadlineDate);
+  const submittedKey = useMemo(() => `qwinhub-quiz-submitted:${quiz.slug}`, [quiz.slug]);
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(submittedKey);
+      if (s === "1") setSubmitted(true);
+    } catch (_) {}
+  }, [submittedKey]);
 
   return (
     <div className="border rounded-lg p-4 bg-white shadow-sm flex flex-col gap-3">
@@ -50,12 +59,22 @@ export default function PublicQuizCard({ quiz }: { quiz: PublicQuiz }) {
       {/* Actions */}
       {active ? (
         <div className="mt-1">
-          <Link
-            href={`/quiz/${quiz.slug}`}
-            className="inline-flex items-center px-3 py-1.5 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Answer Now
-          </Link>
+          {submitted ? (
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-gray-200 text-gray-600 cursor-not-allowed"
+            >
+              Submitted
+            </button>
+          ) : (
+            <Link
+              href={`/quiz/${quiz.slug}`}
+              className="inline-flex items-center px-3 py-1.5 text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Answer Now
+            </Link>
+          )}
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
