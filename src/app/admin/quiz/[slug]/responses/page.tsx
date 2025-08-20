@@ -35,7 +35,7 @@ export default async function QuizResponsesPage({ params }: { params: Promise<{ 
         </div>
 
         <AdminQuizResponsesClient
-          quiz={{ title: quiz.title, slug: quiz.slug }}
+          quiz={{ title: quiz.title, slug: quiz.slug, winner: quiz.winner ? { name: quiz.winner.name, phone: quiz.winner.phone } : null }}
           stats={stats}
           responses={(quiz.responses || []).map((r: any) => ({
             id: r.id,

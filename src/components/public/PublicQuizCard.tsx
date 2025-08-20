@@ -12,10 +12,12 @@ export type PublicQuiz = {
   // correctAnswer will be null for active quizzes (privacy); available for expired
   correctAnswer: string | null;
   deadline: string | Date;
+  winner?: { name: string; phoneMasked: string } | null;
 };
 
 export default function PublicQuizCard({ quiz }: { quiz: PublicQuiz }) {
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showWinner, setShowWinner] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const deadlineDate = typeof quiz.deadline === "string" ? new Date(quiz.deadline) : quiz.deadline;
   const active = isQuizActive(deadlineDate);
@@ -91,6 +93,23 @@ export default function PublicQuizCard({ quiz }: { quiz: PublicQuiz }) {
           {showAnswer && quiz.correctAnswer && (
             <span className="inline-flex items-center px-2.5 py-1 text-sm rounded-md bg-blue-50 text-blue-700 border border-blue-200">
               {quiz.correctAnswer}
+            </span>
+          )}
+
+          {/* Winner (masked) */}
+          <button
+            type="button"
+            onClick={() => setShowWinner((s) => !s)}
+            className="inline-flex items-center px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 disabled:opacity-60"
+            disabled={!quiz.winner}
+            aria-disabled={!quiz.winner}
+            title={!quiz.winner ? 'Winner not declared' : undefined}
+          >
+            {showWinner ? 'Hide Winner' : 'Show Winner'}
+          </button>
+          {showWinner && quiz.winner && (
+            <span className="inline-flex items-center px-2.5 py-1 text-sm rounded-md bg-green-50 text-green-700 border border-green-200">
+              {quiz.winner.name} · {quiz.winner.phoneMasked}
             </span>
           )}
         </div>

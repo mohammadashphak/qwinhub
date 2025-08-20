@@ -12,10 +12,12 @@ type Quiz = {
   correctAnswer: string;
   deadline: string | Date;
   _count?: { responses: number };
+  winner?: { name: string; phone: string } | null;
 };
 
 export default function QuizCard({ quiz }: { quiz: Quiz }) {
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showWinner, setShowWinner] = useState(false);
   const [navigating, setNavigating] = useState<"edit" | "responses" | null>(null);
   const active = isQuizActive(new Date(quiz.deadline as any));
 
@@ -60,6 +62,27 @@ export default function QuizCard({ quiz }: { quiz: Quiz }) {
           <span className="inline-flex items-center px-2.5 py-1 text-sm rounded-md bg-blue-50 text-blue-700 border border-blue-200">
             {quiz.correctAnswer}
           </span>
+        )}
+
+        {/* Winner (admin sees full) — show button for all expired; disable if missing winner */}
+        {!active && (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowWinner((s) => !s)}
+              className="inline-flex items-center px-3 py-1.5 text-sm rounded-md border bg-white hover:bg-gray-50 disabled:opacity-60"
+              disabled={!quiz.winner}
+              aria-disabled={!quiz.winner}
+              title={!quiz.winner ? 'Winner not declared' : undefined}
+            >
+              {showWinner ? 'Hide Winner' : 'Show Winner'}
+            </button>
+            {showWinner && quiz.winner && (
+              <span className="inline-flex items-center px-2.5 py-1 text-sm rounded-md bg-green-50 text-green-700 border border-green-200">
+                {quiz.winner.name} · {quiz.winner.phone}
+              </span>
+            )}
+          </>
         )}
       </div>
 

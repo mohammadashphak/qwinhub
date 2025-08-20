@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 
-type QuizMeta = { title: string; slug: string };
+type QuizMeta = { title: string; slug: string; winner?: { name: string; phone: string } | null };
 
 type Stats = { total: number; correct: number; wrong: number };
 
@@ -56,6 +56,14 @@ export default function AdminQuizResponsesClient({
         <Stat label="Wrong" value={stats.wrong} />
         <Stat label="Accuracy" value={`${correctRate}%`} />
       </div>
+
+      {/* Winner details (admin sees full phone) */}
+      {quiz.winner && (
+        <div className="mb-4 rounded-lg border bg-white p-4 flex items-center gap-3">
+          <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Winner</div>
+          <div className="text-sm text-gray-800">{quiz.winner.name} · {quiz.winner.phone}</div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 flex items-center gap-2">

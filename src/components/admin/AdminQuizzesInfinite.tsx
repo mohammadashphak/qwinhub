@@ -12,6 +12,7 @@ export type AdminQuiz = {
   deadline: string | Date;
   createdAt?: string | Date;
   _count?: { responses: number };
+  winner?: { name: string; phone: string } | null;
 };
 
 type Filter = "active" | "expired";

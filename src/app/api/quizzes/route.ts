@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { createApiError, createApiResponse, getErrorMessage } from '@/lib/utils';
 
 // GET /api/quizzes?filter=active|expired&pageSize=15&cursor=...
@@ -52,16 +53,48 @@ export async function GET(request: NextRequest) {
           correctAnswer: true,
           deadline: true,
           createdAt: true,
+          winner: {
+            select: {
+              name: true,
+              phone: true,
+            },
+          },
         },
       }),
       db.quiz.count({ where }),
     ]);
 
-    // Only expose correctAnswer for expired quizzes
-    const withPrivacy = items.map((q) => ({
-      ...q,
-      correctAnswer: filter === 'expired' ? q.correctAnswer : null,
-    }));
+    // Only expose correctAnswer for expired quizzes; add masked winner for expired quizzes
+    const withPrivacy = items.map((q) => {
+      const base: any = {
+        id: q.id,
+        title: q.title,
+        slug: q.slug,
+        options: q.options,
+        correctAnswer: filter === 'expired' ? q.correctAnswer : null,
+        deadline: q.deadline,
+        createdAt: q.createdAt,
+      };
+      if (filter === 'expired' && q.winner) {
+        // Mask phone for public: show +country code and first/last 2-3 digits
+        let masked = '****';
+        try {
+          const parsed = parsePhoneNumberFromString(q.winner.phone || '');
+          if (parsed) {
+            const cc = parsed.countryCallingCode ? `+${parsed.countryCallingCode}` : '';
+            const national = parsed.nationalNumber || '';
+            const keep = national.length >= 7 ? 3 : 2;
+            const start = national.slice(0, keep);
+            const end = national.slice(-keep);
+            masked = `${cc} ${start}****${end}`;
+          }
+        } catch (err) {
+          console.error('Error parsing phone number:', err);
+        }
+        base.winner = { name: q.winner.name, phoneMasked: masked };
+      }
+      return base;
+    });
 
     const last = items[items.length - 1];
     const nextCursor = items.length === pageSize && last
