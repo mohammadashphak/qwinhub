@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 import AdminQuizzesInfinite from "@/components/admin/AdminQuizzesInfinite";
 import Link from "next/link";
+import AdminFilterTabs from "@/components/admin/AdminFilterTabs";
 
-export default async function AdminQuizzesPage({ searchParams }: { searchParams: { filter?: string } }) {
-  const filter = (searchParams?.filter || "active").toLowerCase() as "active" | "expired";
+export default async function AdminQuizzesPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
+  const filter = ((await searchParams)?.filter || "active").toLowerCase() as "active" | "expired";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,26 +21,10 @@ export default async function AdminQuizzesPage({ searchParams }: { searchParams:
           </Link>
         </div>
 
-        <div className="mb-6 flex items-center gap-2">
-          <FilterLink label="Active" href="/admin/quizzes?filter=active" active={filter === "active"} />
-          <FilterLink label="Expired" href="/admin/quizzes?filter=expired" active={filter === "expired"} />
-        </div>
+        <AdminFilterTabs current={filter} />
 
         <AdminQuizzesInfinite filter={filter} pageSize={15} />
       </div>
     </div>
-  );
-}
-
-function FilterLink({ label, href, active }: { label: string; href: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md border ${
-        active ? "bg-gray-900 text-white border-gray-900" : "bg-white hover:bg-gray-50"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }
