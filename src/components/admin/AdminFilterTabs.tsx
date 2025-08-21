@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "qwinhub-admin-quizzes-filter";
 
@@ -11,6 +12,8 @@ type Props = {
 
 export default function AdminFilterTabs({ current }: Props) {
   const [selected, setSelected] = useState<"active" | "expired">(current);
+  const router = useRouter();
+  const sp = useSearchParams();
 
   // Initialize from localStorage if URL doesn't specify a different filter
   useEffect(() => {
@@ -19,8 +22,12 @@ export default function AdminFilterTabs({ current }: Props) {
         | "active"
         | "expired"
         | null;
-      if (saved && saved !== current) {
+      if (!saved) return;
+      const urlFilter =
+        (sp.get("filter") as "active" | "expired" | null) || null;
+      if (saved !== current || saved !== urlFilter) {
         setSelected(saved);
+        router.replace(`/admin/quizzes?filter=${saved}`);
       }
     } catch (_) {}
   }, [current]);
@@ -66,7 +73,9 @@ function FilterLink({
       href={href}
       onClick={onClick}
       className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md border ${
-        active ? "bg-gray-900 text-white border-gray-900" : "bg-white hover:bg-gray-50"
+        active
+          ? "bg-gray-900 text-white border-gray-900"
+          : "bg-white hover:bg-gray-50"
       }`}
     >
       {label}

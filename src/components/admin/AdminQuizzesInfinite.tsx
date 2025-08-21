@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import QuizCard from "@/components/admin/QuizCard";
 
 export type AdminQuiz = {
@@ -17,7 +23,13 @@ export type AdminQuiz = {
 
 type Filter = "active" | "expired";
 
-export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter: Filter; pageSize?: number }) {
+export default function AdminQuizzesInfinite({
+  filter,
+  pageSize = 15,
+}: {
+  filter: Filter;
+  pageSize?: number;
+}) {
   const [items, setItems] = useState<AdminQuiz[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,9 +37,15 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const requestSeq = useRef(0);
+  const activeReq = useRef(0);
 
   // Reset when filter changes
   useEffect(() => {
+    // Abort any in-flight request when filter changes
+    abortRef.current?.abort();
+    requestSeq.current += 1;
     setItems([]);
     setCursor(null);
     setHasMore(true);
@@ -39,6 +57,13 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
     setLoading(true);
     setError(null);
     try {
+      // Prepare request with cancellation and stale response guard
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const seq = ++requestSeq.current;
+      activeReq.current = seq;
+
       const qs = new URLSearchParams();
       qs.set("filter", filter);
       qs.set("pageSize", String(pageSize));
@@ -46,9 +71,13 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
       const res = await fetch(`/api/admin/quizzes?${qs.toString()}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Failed to load quizzes");
+
+      // Ignore if a newer request has started
+      if (seq !== activeReq.current) return;
 
       const newItems: AdminQuiz[] = json?.data?.items ?? [];
       const nextHasMore: boolean = !!json?.data?.hasMore;
@@ -63,6 +92,7 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
       const nextCursor: string | null = json?.data?.nextCursor ?? null;
       setCursor(nextCursor);
     } catch (e: any) {
+      if (e?.name === "AbortError") return; // ignore aborts
       setError(e?.message || "Failed to load quizzes");
     } finally {
       setLoading(false);
@@ -80,15 +110,25 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
   useEffect(() => {
     if (!sentinelRef.current) return;
     const el = sentinelRef.current;
-    const obs = new IntersectionObserver((entries) => {
-      const first = entries[0];
-      if (first.isIntersecting && !loading && hasMore) {
-        void fetchPage();
-      }
-    }, { rootMargin: "400px" });
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && !loading && hasMore) {
+          void fetchPage();
+        }
+      },
+      { rootMargin: "400px" }
+    );
     obs.observe(el);
     return () => obs.disconnect();
   }, [fetchPage, hasMore, loading]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   // Manual load-all to ensure completeness if user wants everything without scrolling
   const loadAll = useCallback(async () => {
@@ -103,11 +143,21 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
 
   return (
     <>
-      {items.length === 0 && !loading && !error && (
-        <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">No quizzes found.</div>
-      )}
+      {items.length === 0 &&
+        !error &&
+        (loading || hasMore ? (
+          <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">
+            Loading...
+          </div>
+        ) : (
+          <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">
+            No quizzes found.
+          </div>
+        ))}
       {error && (
-        <div className="rounded-lg border bg-white p-4 text-sm text-red-600">{error}</div>
+        <div className="rounded-lg border bg-white p-4 text-sm text-red-600">
+          {error}
+        </div>
       )}
 
       {items.length > 0 && (
@@ -122,7 +172,9 @@ export default function AdminQuizzesInfinite({ filter, pageSize = 15 }: { filter
 
       <div className="flex flex-col items-center gap-2 mt-6">
         {typeof total === "number" && (
-          <div className="text-xs text-gray-500">Loaded {items.length} of {total}</div>
+          <div className="text-xs text-gray-500">
+            Loaded {items.length} of {total}
+          </div>
         )}
         {loading ? (
           <button

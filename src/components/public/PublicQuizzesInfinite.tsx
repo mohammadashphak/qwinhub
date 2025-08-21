@@ -19,9 +19,15 @@ export default function PublicQuizzesInfinite({
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const requestSeq = useRef(0);
+  const activeReq = useRef(0);
 
   // Reset when filter changes
   useEffect(() => {
+    // Abort any in-flight request when filter changes
+    abortRef.current?.abort();
+    requestSeq.current += 1;
     setItems([]);
     setCursor(null);
     setHasMore(true);
@@ -33,13 +39,25 @@ export default function PublicQuizzesInfinite({
     setLoading(true);
     setError(null);
     try {
+      // Prepare request with cancellation and stale response guard
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const seq = ++requestSeq.current;
+      activeReq.current = seq;
+
       const qs = new URLSearchParams();
       qs.set("filter", filter);
       qs.set("pageSize", String(pageSize));
       if (cursor) qs.set("cursor", cursor);
-      const res = await fetch(`/api/quizzes?${qs.toString()}`);
+      const res = await fetch(`/api/quizzes?${qs.toString()}`, {
+        signal: controller.signal,
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Failed to load quizzes");
+
+      // Ignore if a newer request has started
+      if (seq !== activeReq.current) return;
 
       const newItems: PublicQuiz[] = json?.data?.items ?? [];
       const nextHasMore: boolean = !!json?.data?.hasMore;
@@ -54,6 +72,7 @@ export default function PublicQuizzesInfinite({
       const nextCursor: string | null = json?.data?.nextCursor ?? null;
       setCursor(nextCursor);
     } catch (e: any) {
+      if (e?.name === "AbortError") return; // ignore aborts
       setError(e?.message || "Failed to load quizzes");
     } finally {
       setLoading(false);
@@ -84,6 +103,13 @@ export default function PublicQuizzesInfinite({
     return () => obs.disconnect();
   }, [fetchPage, hasMore, loading]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
   // Manual load-all to ensure completeness if user wants everything without scrolling
   const loadAll = useCallback(async () => {
     let guard = 0;
@@ -97,11 +123,17 @@ export default function PublicQuizzesInfinite({
 
   return (
     <>
-      {items.length === 0 && !loading && !error && (
-        <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">
-          No quizzes found.
-        </div>
-      )}
+      {items.length === 0 &&
+        !error &&
+        (loading || hasMore ? (
+          <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">
+            Loading...
+          </div>
+        ) : (
+          <div className="rounded-lg border bg-white p-8 text-center text-sm text-gray-600">
+            No quizzes found.
+          </div>
+        ))}
       {error && (
         <div className="rounded-lg border bg-white p-4 text-sm text-red-600">
           {error}

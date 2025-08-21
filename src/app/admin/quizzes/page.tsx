@@ -23,7 +23,7 @@ export default async function AdminQuizzesPage({ searchParams }: { searchParams:
 
         <AdminFilterTabs current={filter} />
 
-        <AdminQuizzesInfinite filter={filter} pageSize={15} />
+        <AdminQuizzesInfinite key={filter} filter={filter} pageSize={15} />
       </div>
     </div>
   );

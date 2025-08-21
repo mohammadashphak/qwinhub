@@ -16,7 +16,7 @@ export default async function QuizzesPage({ searchParams }: { searchParams: Prom
 
         <PublicFilterTabs current={filter} />
 
-        <PublicQuizzesInfinite filter={filter} pageSize={15} />
+        <PublicQuizzesInfinite key={filter} filter={filter} pageSize={15} />
       </div>
     </div>
   );

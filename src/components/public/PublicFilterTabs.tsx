@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "qwinhub-public-quizzes-filter";
 
@@ -11,13 +12,23 @@ type Props = {
 
 export default function PublicFilterTabs({ current }: Props) {
   const [selected, setSelected] = useState<"active" | "expired">(current);
+  const router = useRouter();
+  const sp = useSearchParams();
 
   // Initialize from localStorage if URL doesn't specify a different filter
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as "active" | "expired" | null;
-      if (saved && saved !== current) {
+      const saved = localStorage.getItem(STORAGE_KEY) as
+        | "active"
+        | "expired"
+        | null;
+      if (!saved) return;
+      // If URL filter missing or different, normalize URL to saved filter to avoid defaulting to active on back
+      const urlFilter =
+        (sp.get("filter") as "active" | "expired" | null) || null;
+      if (saved !== current || saved !== urlFilter) {
         setSelected(saved);
+        router.replace(`/quizzes?filter=${saved}`);
       }
     } catch (_) {}
   }, [current]);
@@ -31,19 +42,41 @@ export default function PublicFilterTabs({ current }: Props) {
 
   return (
     <div className="mb-6 flex items-center justify-center gap-2">
-      <FilterLink label="Active" href="/quizzes?filter=active" active={selected === "active"} onClick={() => setSelected("active")} />
-      <FilterLink label="Expired" href="/quizzes?filter=expired" active={selected === "expired"} onClick={() => setSelected("expired")} />
+      <FilterLink
+        label="Active"
+        href="/quizzes?filter=active"
+        active={selected === "active"}
+        onClick={() => setSelected("active")}
+      />
+      <FilterLink
+        label="Expired"
+        href="/quizzes?filter=expired"
+        active={selected === "expired"}
+        onClick={() => setSelected("expired")}
+      />
     </div>
   );
 }
 
-function FilterLink({ label, href, active, onClick }: { label: string; href: string; active: boolean; onClick: () => void }) {
+function FilterLink({
+  label,
+  href,
+  active,
+  onClick,
+}: {
+  label: string;
+  href: string;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
     <Link
       href={href}
       onClick={onClick}
       className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md border ${
-        active ? "bg-gray-900 text-white border-gray-900" : "bg-white hover:bg-gray-50"
+        active
+          ? "bg-gray-900 text-white border-gray-900"
+          : "bg-white hover:bg-gray-50"
       }`}
     >
       {label}
